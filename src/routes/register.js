@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.SINGING_SECRET
 
 const rpName = process.env.RP_NAME
 const rpID = process.env.RP_ID
-const origin = `http://${rpID}:5173`
+const origin = `http://${rpID}`
 
 route.post('/', async (req, res) => {
     try {
