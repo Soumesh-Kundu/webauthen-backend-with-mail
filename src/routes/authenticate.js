@@ -14,7 +14,7 @@ config()
 const JWT_SECRET=process.env.SINGING_SECRET
 const rpName=process.env.RP_NAME
 const rpID=process.env.RP_ID
-const origin=`https://${rpID}${process.env.RP_SUBDOMAIN}`
+const origin=`https://${rpID}`
 
 route.post('/',async(req,res)=>{
     const {username,password}=req.body
