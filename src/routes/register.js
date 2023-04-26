@@ -44,18 +44,20 @@ route.post('/generate-register-option', async (req, res) => {
         const user = await User.findOne({username})
         const authenticators = user.devices
         console.log(authenticators)
+        console.log(base64urlToUint8(authenticators.credentialID))
         const options = generateRegistrationOptions({
             rpName,
             rpID,
             userID: user.id,
             userName: user.username,
             attestationType: "none",
-            excludeCredentials: authenticators.length?authenticators.map(authenticator => ({
+            excludeCredentials:authenticators.map(authenticator => ({
                 id: base64urlToUint8(authenticator.credentialID),
                 type: "public-key",
                 transports: authenticator.transports
-            })):[]
+            }))
         })
+        console.log(options)
         res.status(200).json(options)
         await User.findByIdAndUpdate(user.id, { $set: { challenge: options.challenge } })
     }
