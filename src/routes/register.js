@@ -7,7 +7,7 @@ import {
 import bcrypt from 'bcrypt'
 import User from '../models/User.js'
 import JWT from 'jsonwebtoken'
-import { uint8Tobase64url } from '../helpers/helper.js'
+import { base64urlToUint8, uint8Tobase64url } from '../helpers/helper.js'
 import { authenticator } from '../middleware/authenticator.js';
 
 config()
@@ -43,6 +43,7 @@ route.post('/generate-register-option', async (req, res) => {
     try {
         const user = await User.findOne({username})
         const authenticators = user.devices
+        console.log(authenticators)
         const options = generateRegistrationOptions({
             rpName,
             rpID,
@@ -50,7 +51,7 @@ route.post('/generate-register-option', async (req, res) => {
             userName: user.username,
             attestationType: "none",
             excludeCredentials: authenticators.length?authenticators.map(authenticator => ({
-                id: authenticator.credentialID,
+                id: base64urlToUint8(authenticator.credentialID),
                 type: "public-key",
                 transports: authenticator.transports
             })):[]
