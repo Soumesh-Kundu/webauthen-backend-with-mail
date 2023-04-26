@@ -49,11 +49,11 @@ route.post('/generate-register-option', async (req, res) => {
             userID: user.id,
             userName: user.username,
             attestationType: "none",
-            excludeCredentials: authenticators.map(authenticator => ({
+            excludeCredentials: authenticators.length?authenticators.map(authenticator => ({
                 id: authenticator.credentialID,
                 type: "public-key",
                 transports: authenticator.transports
-            }))
+            })):[]
         })
         res.status(200).json(options)
         await User.findByIdAndUpdate(user.id, { $set: { challenge: options.challenge } })
