@@ -44,7 +44,7 @@ route.post('/generate-register-option', async (req, res) => {
         const user = await User.findOne({username})
         const authenticators = user.devices
         console.log(authenticators)
-        console.log(base64urlToUint8(authenticators.credentialID))
+        console.log(base64urlToUint8(authenticators[0].credentialID))
         const options = generateRegistrationOptions({
             rpName,
             rpID,
