@@ -3,33 +3,60 @@ import {
     generateAuthenticationOptions, verifyAuthenticationResponse
 } from '@simplewebauthn/server';
 import User from '../models/User.js';
+import Token from '../models/Token.js';
 import JWT from 'jsonwebtoken'
-import bcrypt from 'bcrypt'
 import {config} from 'dotenv'
-import { authenticator } from '../middleware/authenticator.js';
-import { base64urlToUint8, uint8Tobase64url } from '../helpers/helper.js';
+import { OTPGenerator, base64urlToUint8, uint8Tobase64url } from '../helpers/helper.js';
+import { VerifyOTP } from '../helpers/helper.js';
 export const route=express.Router()
 
 config()
 const JWT_SECRET=process.env.SINGING_SECRET
 const rpName=process.env.RP_NAME
 const rpID=process.env.RP_ID
-const origin=`https://${rpID}`
+const origin=`http://${rpID}:5173`
 
 route.post('/',async(req,res)=>{
-    const {username,password}=req.body
+    const {username}=req.body
     try {
-        const {password:hashPassword}=await User.findOne({username})
-        const verified=await bcrypt.compare(password,hashPassword)
-        if(!verified){
-            return res.status(400).json({success:"false",message:"Incorrect Credentials"})
+        const userData=await User.findOne({username})
+        if(!userData){
+            return res.status(400).json({error:"User doesn't exists"})
         }
-        res.status(200).json({success:true,message:"You are authenticated"})
+        const {Phone,id:user}=userData
+        const {secret,token}=OTPGenerator()
+        await Token.findOneAndUpdate({user},{
+            secret,
+            user,
+            created_At:Date.now()
+        },{upsert:true})
+        console.log(token)
+        res.status(200).json({success:true,message:"Otp Sented",token})
     } catch (error) {
         console.log(error)
     }
 })
-
+route.post('/token-authenticate',async (req,res)=>{
+    const {username,token}=req.body
+    try {
+        const user=await User.findOne({username})
+        const {id,secret,user:userId,created_At}=await Token.findOne({user:user.id})
+        if(userId.toString()!==user.id){
+            return res.status(401).json({error:"Please enter a valid token"})
+        }
+        if(Date.now()-created_At>63500){
+            return res.status(408).json({error:'OTP expired'})
+        }
+        const verified=VerifyOTP(secret,token)
+        if(!verified){
+            return res.status(400).json({error:'Please enter a valid token'})
+        }
+        await Token.findByIdAndDelete(id)
+        res.status(200).json({message:"user Verified"})
+    } catch (error) {
+        
+    }
+})
 route.post('/generate-authenticate-option',async (req, res) => {
     const {username}=req.body
     try {

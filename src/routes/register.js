@@ -1,5 +1,6 @@
 import express from 'express'
 import { config } from 'dotenv'
+import Token from '../models/Token.js'
 import {
     generateRegistrationOptions,
     verifyRegistrationResponse,
@@ -7,8 +8,8 @@ import {
 import bcrypt from 'bcrypt'
 import User from '../models/User.js'
 import JWT from 'jsonwebtoken'
-import { base64urlToUint8, uint8Tobase64url } from '../helpers/helper.js'
-import { authenticator } from '../middleware/authenticator.js';
+import { base64urlToUint8, uint8Tobase64url,OTPGenerator } from '../helpers/helper.js'
+
 
 config()
 export const route = express.Router()
@@ -16,18 +17,23 @@ const JWT_SECRET = process.env.SINGING_SECRET
 
 const rpName = process.env.RP_NAME
 const rpID = process.env.RP_ID
-const origin = `https://${rpID}`
+const origin = `http://${rpID}:5173`
 
 route.post('/', async (req, res) => {
     try {
-        const { username, password } = req.body
-        const salt = await bcrypt.genSalt(15)
-        const hashPassword = await bcrypt.hash(password, salt)
-       await User.create({
+        const { username, Phone } = req.body
+        const user=await User.create({
             username,
-            password: hashPassword
+            Phone
         })
-        return res.status(200).json({ success: true, message: "your account has been created" })
+        const {secret,token}=OTPGenerator()
+        await Token.findOneAndUpdate({user:user.id},{
+            secret,
+            user:user.id,
+            created_At:Date.now()
+        },{upsert:true})
+        console.log(token)
+        return res.status(200).json({ success: true, message: "your account has been created",token })
     }
     catch (error) {
         console.log(error)
@@ -39,25 +45,22 @@ route.post('/', async (req, res) => {
     }
 })
 route.post('/generate-register-option', async (req, res) => {
-    const {username}= req.body
+    const { username } = req.body
     try {
-        const user = await User.findOne({username})
+        const user = await User.findOne({ username })
         const authenticators = user.devices
-        console.log(authenticators)
-        console.log(base64urlToUint8(authenticators[0].credentialID))
         const options = generateRegistrationOptions({
             rpName,
             rpID,
             userID: user.id,
             userName: user.username,
             attestationType: "none",
-            excludeCredentials:authenticators.map(authenticator => ({
+            excludeCredentials: authenticators.map(authenticator => ({
                 id: base64urlToUint8(authenticator.credentialID),
                 type: "public-key",
                 transports: authenticator.transports
             }))
         })
-        console.log(options)
         res.status(200).json(options)
         await User.findByIdAndUpdate(user.id, { $set: { challenge: options.challenge } })
     }
@@ -68,8 +71,8 @@ route.post('/generate-register-option', async (req, res) => {
 })
 
 route.post('/Verify-Registration', async (req, res) => {
-    const { registrationBody: body,username } = req.body
-    const user = await User.findOne({username})
+    const { registrationBody: body, username } = req.body
+    const user = await User.findOne({ username })
     const { challenge: expectedChallenge } = user
     let verification
     try {
@@ -86,12 +89,13 @@ route.post('/Verify-Registration', async (req, res) => {
         const { credentialID, counter, credentialPublicKey } = registrationInfo
         const data = {
             user: {
-                id:user.id
+                id: user.id
             }
         }
         const sessionToken = JWT.sign(data, JWT_SECRET)
-        res.status(200).json({ verified,sessionToken })
-        await User.findByIdAndUpdate(user.id, {$set:{challenge:""},
+        res.status(200).json({ verified, sessionToken })
+        await User.findByIdAndUpdate(user.id, {
+            $set: { challenge: "" },
             $push: {
                 devices: {
                     credentialID: uint8Tobase64url(credentialID),

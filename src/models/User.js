@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 const UserSchema=mongoose.Schema({
     username:{type:String,require:true,unique:true},
-    password:{type:String,require:true},
+    Phone:{type:Number,require:true},
     devices:{
         type:[{
             credentialID:{type:String},
