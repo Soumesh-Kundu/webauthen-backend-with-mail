@@ -5,7 +5,6 @@ import {
     generateRegistrationOptions,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server';
-import bcrypt from 'bcrypt'
 import User from '../models/User.js'
 import JWT from 'jsonwebtoken'
 import { base64urlToUint8, uint8Tobase64url,OTPGenerator } from '../helpers/helper.js'
@@ -17,7 +16,7 @@ const JWT_SECRET = process.env.SINGING_SECRET
 
 const rpName = process.env.RP_NAME
 const rpID = process.env.RP_ID
-const origin = `http://${rpID}:5173`
+const origin = `https://${rpID}`
 
 route.post('/', async (req, res) => {
     try {
