@@ -31,7 +31,7 @@ route.post('/',async(req,res)=>{
             created_At:Date.now()
         },{upsert:true})
         console.log(token)
-        res.status(200).json({success:true,message:"Otp Sented"})
+        res.status(200).json({success:true,message:"Otp Sented",token})
     } catch (error) {
         console.log(error)
     }
