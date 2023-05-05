@@ -8,6 +8,8 @@ import JWT from 'jsonwebtoken'
 import {config} from 'dotenv'
 import { OTPGenerator, base64urlToUint8, uint8Tobase64url } from '../helpers/helper.js';
 import { VerifyOTP } from '../helpers/helper.js';
+import sendMail from '../helpers/gmail.js'
+
 export const route=express.Router()
 
 config()
@@ -17,9 +19,9 @@ const rpID=process.env.RP_ID
 const origin=`https://${rpID}`
 
 route.post('/',async(req,res)=>{
-    const {username}=req.body
+    const {Email}=req.body
     try {
-        const userData=await User.findOne({username})
+        const userData=await User.findOne({Email})
         if(!userData){
             return res.status(400).json({error:"User doesn't exists"})
         }
@@ -30,21 +32,28 @@ route.post('/',async(req,res)=>{
             user,
             created_At:Date.now()
         },{upsert:true})
-        console.log(token)
-        res.status(200).json({success:true,message:"Otp Sented",token})
+
+        await sendMail({
+            to:Email,
+            from:"webAuthn",
+            subject:'OTP for verification',
+            body:`<p style="font-size:16px">Your OTP is <span style="font-weight:bold;font-size:19px">${token}</span>, hurry up! it will expire in 60 seconds</p>`
+        })
+
+        res.status(200).json({success:true,message:"Otp Sented"})
     } catch (error) {
         console.log(error)
     }
 })
 route.post('/token-authenticate',async (req,res)=>{
-    const {username,token}=req.body
+    const {Email,token}=req.body
     try {
-        const user=await User.findOne({username})
+        const user=await User.findOne({Email})
         const {id,secret,user:userId,created_At}=await Token.findOne({user:user.id})
         if(userId.toString()!==user.id){
             return res.status(401).json({error:"Please enter a valid token"})
         }
-        if(Date.now()-created_At>63500){
+        if(Date.now()-created_At>65000){
             return res.status(408).json({error:'OTP expired'})
         }
         const verified=VerifyOTP(secret,token)
@@ -58,9 +67,9 @@ route.post('/token-authenticate',async (req,res)=>{
     }
 })
 route.post('/generate-authenticate-option',async (req, res) => {
-    const {username}=req.body
+    const {Email}=req.body
     try {
-        const user = await User.findOne({username})
+        const user = await User.findOne({Email})
         const authenticators = user.devices
         const allowCredentials = []
         authenticators.forEach(authenticator => {
@@ -84,9 +93,9 @@ route.post('/generate-authenticate-option',async (req, res) => {
     }
 })
 route.post('/Verify-Authentication', async (req, res) => {
-    const { authenticationBody: body,username } = req.body 
+    const { authenticationBody: body,Email } = req.body 
     try {
-        const user = await User.findOne({username})
+        const user = await User.findOne({Email})
         const {challenge:expectedChallenge} = user
         const authenticator = user.devices.find(device => device.credentialID === body.id)
         if (!authenticator) {
