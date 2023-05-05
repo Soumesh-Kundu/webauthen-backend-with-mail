@@ -1,6 +1,6 @@
 import google from '@googleapis/gmail'
-import Credentials from '../../OAUTH2_credentials.json' assert {type:"json"}
-import token from '../../token.json' assert {type:"json"}
+import Credentials from '../../credentials/OAUTH2_credentials.json' assert {type:"json"}
+import token from '../../credentials/token.json' assert {type:"json"}
 
 const {client_id,client_secret,redirect_uris}=Credentials.web
 const OAUTH2Client=new google.auth.OAuth2(client_id,client_secret,redirect_uris[0])
