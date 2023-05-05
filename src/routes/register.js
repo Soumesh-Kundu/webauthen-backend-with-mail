@@ -5,10 +5,10 @@ import {
     generateRegistrationOptions,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server';
-import bcrypt from 'bcrypt'
 import User from '../models/User.js'
 import JWT from 'jsonwebtoken'
-import { base64urlToUint8, uint8Tobase64url,OTPGenerator } from '../helpers/helper.js'
+import { base64urlToUint8, uint8Tobase64url, OTPGenerator } from '../helpers/helper.js'
+import sendMail from '../helpers/gmail.js'
 
 
 config()
@@ -17,43 +17,51 @@ const JWT_SECRET = process.env.SINGING_SECRET
 
 const rpName = process.env.RP_NAME
 const rpID = process.env.RP_ID
-const origin = `http://${rpID}:5173`
+const origin = `https://${rpID}`
 
 route.post('/', async (req, res) => {
     try {
-        const { username, Phone } = req.body
-        const user=await User.create({
-            username,
+        const { Email, Phone } = req.body
+        const user = await User.create({
+            Email,
             Phone
         })
-        const {secret,token}=OTPGenerator()
-        await Token.findOneAndUpdate({user:user.id},{
+        const { secret, token } = OTPGenerator()
+        await Token.findOneAndUpdate({ user: user.id }, {
             secret,
-            user:user.id,
-            created_At:Date.now()
-        },{upsert:true})
-        console.log(token)
-        return res.status(200).json({ success: true, message: "your account has been created",token })
+            user: user.id,
+            created_At: Date.now()
+        }, { upsert: true })
+
+        await sendMail({
+            to: Email,
+            from: "webAuthn",
+            subject: 'OTP for verification',
+            body: `<p style="font-size:16px">Your OTP is <span style="font-weight:bold;font-size:19px">${token}</span>, hurry up! it will expire in 60 seconds</p>`
+        })
+
+        return res.status(200).json({ success: true, message: "your account has been created" })
     }
     catch (error) {
         console.log(error)
-        if (error.keyPattern && error.keyPattern.username === 1) {
-            res.status(403).json({ error: "The username already exists" })
+        if (error.keyPattern && error.keyPattern.Email === 1) {
+            res.status(403).json({ error: "The Email already exists" })
             return
         }
         res.status(500).json({ error: "Internal Server Error" })
     }
 })
 route.post('/generate-register-option', async (req, res) => {
-    const { username } = req.body
+    const { Email } = req.body
     try {
-        const user = await User.findOne({ username })
+        const user = await User.findOne({ Email })
+        console.log(user)
         const authenticators = user.devices
         const options = generateRegistrationOptions({
             rpName,
             rpID,
             userID: user.id,
-            userName: user.username,
+            userName: user.Email,
             attestationType: "none",
             excludeCredentials: authenticators.map(authenticator => ({
                 id: base64urlToUint8(authenticator.credentialID),
@@ -71,8 +79,8 @@ route.post('/generate-register-option', async (req, res) => {
 })
 
 route.post('/Verify-Registration', async (req, res) => {
-    const { registrationBody: body, username } = req.body
-    const user = await User.findOne({ username })
+    const { registrationBody: body, Email } = req.body
+    const user = await User.findOne({ Email })
     const { challenge: expectedChallenge } = user
     let verification
     try {

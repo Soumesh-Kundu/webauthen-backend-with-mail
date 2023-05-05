@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 const UserSchema=mongoose.Schema({
-    username:{type:String,require:true,unique:true},
+    Email:{type:String,require:true,unique:true},
     Phone:{type:Number,require:true},
     devices:{
         type:[{
