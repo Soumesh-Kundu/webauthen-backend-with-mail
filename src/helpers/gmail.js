@@ -2,9 +2,11 @@ import google from '@googleapis/gmail'
 import Credentials from '../../credentials/OAUTH2_credentials.json' assert {type:"json"}
 import token from '../../credentials/token.json' assert {type:"json"}
 
+const {refresh_token}=token
+
 const {client_id,client_secret,redirect_uris}=Credentials.web
 const OAUTH2Client=new google.auth.OAuth2(client_id,client_secret,redirect_uris[0])
-OAUTH2Client.setCredentials(token)
+OAUTH2Client.setCredentials({refresh_token})
 const gmail=google.gmail({
     version:'v1',
     auth:OAUTH2Client
