@@ -19,6 +19,7 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.4",
-    "speakeasy": "^2.0.0"
+    "speakeasy": "^2.0.0",
+    "twilio": "^4.11.0"
   }
 }

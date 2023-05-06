@@ -8,7 +8,7 @@ import JWT from 'jsonwebtoken'
 import {config} from 'dotenv'
 import { OTPGenerator, base64urlToUint8, uint8Tobase64url } from '../helpers/helper.js';
 import { VerifyOTP } from '../helpers/helper.js';
-import sendMail from '../helpers/gmail.js'
+import sendSMS from '../helpers/sms.js';
 
 export const route=express.Router()
 
@@ -33,11 +33,9 @@ route.post('/',async(req,res)=>{
             created_At:Date.now()
         },{upsert:true})
 
-        await sendMail({
-            to:Email,
-            from:"webAuthn",
-            subject:'OTP for verification',
-            body:`<p style="font-size:16px">Your OTP is <span style="font-weight:bold;font-size:19px">${token}</span>, hurry up! it will expire in 60 seconds</p>`
+        await sendSMS({
+            to: Phone,
+            body: `Your OTP is ${token}, this is valid for 60 seconds only`
         })
 
         res.status(200).json({success:true,message:"Otp Sented"})
