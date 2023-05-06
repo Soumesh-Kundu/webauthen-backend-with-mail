@@ -53,7 +53,6 @@ route.post('/generate-register-option', async (req, res) => {
     const { Email } = req.body
     try {
         const user = await User.findOne({ Email })
-        console.log(user)
         const authenticators = user.devices
         const options = generateRegistrationOptions({
             rpName,
