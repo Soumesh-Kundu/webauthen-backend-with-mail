@@ -34,7 +34,7 @@ route.post('/', async (req, res) => {
         }, { upsert: true })
 
         await sendMail({
-            to: Phone,
+            to: Email,
             from:"Verification Email<iamsoumo26@gmail.com>",
             subject:"Verify Yourself",
             body: `Your OTP is ${token}, this is valid for 60 seconds only`
