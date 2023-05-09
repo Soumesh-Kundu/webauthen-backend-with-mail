@@ -16,7 +16,7 @@ config()
 const JWT_SECRET = process.env.SINGING_SECRET
 const rpName = process.env.RP_NAME
 const rpID = process.env.RP_ID
-const origin = `https://${rpID}`
+const origin = `http://${rpID}:5000`
 
 route.post('/', async (req, res) => {
     const { Email } = req.body
@@ -25,16 +25,16 @@ route.post('/', async (req, res) => {
         if (!userData) {
             return res.status(400).json({ error: "User doesn't exists" })
         }
-        const { Phone, id: user } = userData
+        const { Phone, id: user,Email:email } = userData
         const { secret, token } = OTPGenerator()
         await Token.findOneAndUpdate({ user }, {
             secret,
             user,
             created_At: Date.now()
         }, { upsert: true })
-
+        console.log(email)
         await sendMail({
-            to: Phone,
+            to: email,
             from: "Verification Email<iamsoumo26@gmail.com>",
             subject: "Verify Yourself",
             body: `Your OTP is ${token}, this is valid for 60 seconds only`
