@@ -4,6 +4,7 @@ config()
 const mongo_URL = process.env.DB_URL
 console.log(mongo_URL)
 export default function dbConnect() {
+    console.log(mongo_URL)
     mongoose.connect(mongo_URL)
     mongoose.connection.on('connected', () => {
         console.log("Database is active")
