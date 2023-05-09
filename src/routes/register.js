@@ -8,7 +8,7 @@ import {
 import User from '../models/User.js'
 import JWT from 'jsonwebtoken'
 import { base64urlToUint8, uint8Tobase64url, OTPGenerator } from '../helpers/helper.js'
-import sendSMS from '../helpers/sms.js';
+import sendMail from '../helpers/gmail.js';
 
 
 config()
@@ -33,8 +33,10 @@ route.post('/', async (req, res) => {
             created_At: Date.now()
         }, { upsert: true })
 
-        await sendSMS({
+        await sendMail({
             to: Phone,
+            from:"Verification Email<iamsoumo26@gmail.com>",
+            subject:"Verify Yourself",
             body: `Your OTP is ${token}, this is valid for 60 seconds only`
         })
 
