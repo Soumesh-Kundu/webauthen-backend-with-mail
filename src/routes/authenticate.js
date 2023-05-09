@@ -16,7 +16,7 @@ config()
 const JWT_SECRET = process.env.SINGING_SECRET
 const rpName = process.env.RP_NAME
 const rpID = process.env.RP_ID
-const origin = `http://${rpID}:5000`
+const origin = `https://${rpID}`
 
 route.post('/', async (req, res) => {
     const { Email } = req.body
