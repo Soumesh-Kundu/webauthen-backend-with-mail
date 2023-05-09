@@ -99,9 +99,7 @@ route.post('/Verify-Registration', async (req, res) => {
                 id: user.id
             }
         }
-        const sessionToken = JWT.sign(data, JWT_SECRET)
-        res.status(200).json({ verified, sessionToken })
-        await User.findByIdAndUpdate(user.id, {
+        const newDevice=await User.findByIdAndUpdate(user.id, {
             $set: { challenge: "" },
             $push: {
                 devices: {
@@ -110,7 +108,10 @@ route.post('/Verify-Registration', async (req, res) => {
                     PublicKey: uint8Tobase64url(credentialPublicKey)
                 }
             }
-        })
+        },{new:true})
+        const {id}=newDevice.devices.at(-1)
+        const sessionToken = JWT.sign(data, JWT_SECRET)
+        res.status(200).json({ verified, sessionToken,deviceID:id })
     } catch (error) {
         console.log(error)
         return res.status(500).json({ error: "Internal Server Error" })

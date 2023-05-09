@@ -32,7 +32,6 @@ route.post('/', async (req, res) => {
             user,
             created_At: Date.now()
         }, { upsert: true })
-        console.log(email)
         await sendMail({
             to: email,
             from: "Verification Email<iamsoumo26@gmail.com>",
