@@ -14,9 +14,11 @@ export const route = express.Router()
 
 config()
 const JWT_SECRET = process.env.SINGING_SECRET
+console.log(JWT_SECRET)
 const rpName = process.env.RP_NAME
 const rpID = process.env.RP_ID
-const origin = `https://${rpID}`
+//set the origin as your front end origin and because my rpId is localhost so thats why i used it in origin
+const origin = `http://${rpID}:5000`
 
 route.post('/', async (req, res) => {
     const { Email } = req.body

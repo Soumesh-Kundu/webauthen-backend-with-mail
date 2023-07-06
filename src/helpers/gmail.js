@@ -1,5 +1,5 @@
 import google from '@googleapis/gmail'
-import Credentials from '../../credentials/OAUTH2_credentials.json' assert {type:"json"}
+import Credentials from '../../credentials/Credential.json' assert {type:"json"}
 import token from '../../credentials/token.json' assert {type:"json"}
 
 const {refresh_token}=token

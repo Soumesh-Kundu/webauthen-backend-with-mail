@@ -9,7 +9,7 @@ export function base64urlToUint8(base64String){
 }
 
 export function OTPGenerator() {
-    let secret = speakeasy.generateSecret().base32
+    let secret = speakeasy.generateSecret().base32 //{}
     let token = speakeasy.totp({
         secret,
         encoding: 'base32',
